@@ -16,6 +16,7 @@ void check_balance();
 void get_time(char*);
 void get_date(char*);
 void display_time_date();
+void show_loading(const char* message);
 void clear_screen();
 
 const char* ACCOUNT_FILE = "account.dat";
@@ -100,6 +101,7 @@ void create_acc(){
 
     fwrite(&acc, sizeof(acc), 1, file);
     fclose(file);
+    show_loading("\n\t\t\tCreating account");
     printf("\n\t\t\tAccount created successfully!\n");
 }
 void login_user(){
@@ -133,6 +135,8 @@ void login_user(){
     while(fread(&acc_r, sizeof(acc_r), 1, file)){
         if(acc_r.acc_no == acc_no && acc_r.pass == pass){
             fclose(file);
+            show_loading("\n\n\t\t\tLogging in");
+            sleep(2);
             printf("\n\n\t\t\tYou are logged in your account successfully!!");
             user_menu();
             return;
@@ -193,6 +197,7 @@ void deposit(){
             fseek(file, -sizeof(acc_r), SEEK_CUR);
             fwrite(&acc_r, sizeof(acc_r), 1, file);
             fclose(file);
+            show_loading("\n\t\t\tProcessing deposit");
             printf("\n\t\t\tSuccessfully deposited Tk. %.2f \n\n\t\t\tNew balance is Tk. %.2f", money, acc_r.balance);
             return;
         }
@@ -224,6 +229,7 @@ void withdraw(){
                 fseek(file, -sizeof(acc_r), SEEK_CUR);
                 fwrite(&acc_r, sizeof(acc_r), 1, file);
                 fclose(file);
+                show_loading("\n\t\t\tProcessing withdrawal");
                 printf("\n\t\t\tSuccessfully withdrawn Tk. %.2f \n\n\t\t\tNew balance is Tk. %.2f", money, acc_r.balance);
                 return;
             }else {
@@ -250,6 +256,7 @@ void check_balance(){
 
     while(fread(&acc_read, sizeof(acc_read), 1, file)){
         if(acc_read.acc_no == acc_no){
+            show_loading("\n\t\t\tFetching balance");
             printf("\n\t\t\tYour current balance is Tk. %.2f", acc_read.balance);
             fclose(file);
             return;
@@ -294,4 +301,13 @@ void clear_screen() {
     #else
       system("clear");
     #endif
+}
+void show_loading(const char* message) {
+    printf("%s", message);
+    fflush(stdout);
+    for (int i = 0; i < 3; i++) {
+        usleep(100000);
+        printf(".");
+        fflush(stdout);
+    }
 }
