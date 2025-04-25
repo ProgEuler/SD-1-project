@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 void user_menu();
-int login_user();
+void login_user();
 void user_form();
 void embeded_pass();
 void welcome();
@@ -126,11 +126,25 @@ void create_acc(){
     fclose(file);
     printf("\n Account created successfully!");
 }
-int login_user(){
+void login_user(){
     FILE *file = fopen(ACCOUNT_FILE, "rb+");
     if(file == NULL){
-        printf("Unable to open a")
+        printf("Unable to open a");
+        return;
     }
+
+    int acc_no;
+    int pass;
+    Account acc_r;
+
+    printf("\nEnter your account No: ");
+    scanf("%d", &acc_no);
+    printf("\nEnter your password: ");
+    scanf("%d", &pass);
+
+    if(acc_r.acc_no == acc_no && acc_r.pass == pass){
+        user_menu();
+    }else printf("\nInvalid credantials");
 }
 void user_menu(){
     while (1)
@@ -153,7 +167,7 @@ void user_menu(){
             break;
         case 4:
             printf("Thank your for visiting");
-            return 0;
+            return;
             break;
 
         default:
