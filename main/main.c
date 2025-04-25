@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <conio.h>
 
 void user_menu();
 void login_user();
@@ -95,6 +96,7 @@ void user_form(){
         }
     }
 }
+
 void create_acc(){
     Account acc;
 
@@ -140,7 +142,19 @@ void login_user(){
     printf("\nEnter your account No: ");
     scanf("%d", &acc_no);
     printf("\nEnter your password: ");
-    scanf("%d", &pass);
+    char ch;
+    while((ch = getch()) != '\r') {
+        if(ch == '\b') {
+            if(pass > 0) {
+                printf("\b \b");
+                pass /= 10;
+            }
+        } else if(ch >= '0' && ch <= '9') {
+            printf("*");
+            pass = pass * 10 + (ch - '0');
+        }
+    }
+
 
     while(fread(&acc_r, sizeof(acc_r), 1, file)){
         if(acc_r.acc_no == acc_no && acc_r.pass == pass){
