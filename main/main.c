@@ -142,15 +142,22 @@ void login_user(){
     printf("\nEnter your password: ");
     scanf("%d", &pass);
 
-    if(acc_r.acc_no == acc_no && acc_r.pass == pass){
-        user_menu();
-    }else printf("\nInvalid credantials");
+    while(fread(&acc_r, sizeof(acc_r), 1, file)){
+        if(acc_r.acc_no == acc_no && acc_r.pass == pass){
+            fclose(file);
+            printf("\n\t\t\t\tYou are logged in your account successfully!!");
+            user_menu();
+            return;
+        }
+    }
+    fclose(file);
+    printf("\n\t\t\tInvalid credantials, Try again.");
 }
 void user_menu(){
     while (1)
     {
         int choice;
-        printf("1. deposit money\n");
+        printf("\n\n1. deposit money\n");
         printf("2. withdraw money\n");
         printf("3. check balance\n");
         printf("4. exit\n");
@@ -166,8 +173,8 @@ void user_menu(){
         case 3: check_balance();
             break;
         case 4:
-            printf("Thank your for visiting");
-            return;
+            printf("\n\t\t\tThank your for being with us");
+            exit(0);
             break;
 
         default:
