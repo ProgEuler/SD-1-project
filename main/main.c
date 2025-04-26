@@ -7,6 +7,7 @@
 
 void user_menu();
 void login_user();
+void logout_user();
 void user_form();
 void welcome();
 void create_acc();
@@ -46,7 +47,7 @@ void welcome(){
     user_form();
     return;
 }
-void user_form(){
+void user_form(){4
     int option;
     while (1)
     {
@@ -66,7 +67,6 @@ void user_form(){
             printf("\nExiting Program.\n");
             return;
             break;
-
         default: printf("\nInvalid option");
             break;
         }
@@ -100,9 +100,9 @@ void create_acc(){
     acc.balance = 0;
 
     fwrite(&acc, sizeof(acc), 1, file);
-    fclose(file);
     show_loading("\n\t\t\tCreating account");
     printf("\n\t\t\tAccount created successfully!\n");
+    fclose(file);
 }
 void login_user(){
     FILE *file = fopen(ACCOUNT_FILE, "rb+");
@@ -138,12 +138,16 @@ void login_user(){
             show_loading("\n\n\t\t\tLogging in");
             sleep(2);
             printf("\n\n\t\t\tYou are logged in your account successfully!!");
+            printf("\n\n\t\t\tWELCOME BACK %s!!", acc_r.name);
             user_menu();
             return;
         }
     }
     fclose(file);
     printf("\n\t\t\tInvalid credantials, Try again.");
+}
+void logout_user(){
+    welcome();
 }
 void user_menu(){
     while (1)
@@ -152,7 +156,8 @@ void user_menu(){
         printf("\n\n\t1. deposit money\n");
         printf("\t2. withdraw money\n");
         printf("\t3. check balance\n");
-        printf("\t4. exit\n");
+        printf("\t4. Logout\n");
+        printf("\t5. exit\n");
         printf("\tEnter your choice: ");
         scanf("%d", &choice);
 
@@ -164,7 +169,8 @@ void user_menu(){
             break;
         case 3: check_balance();
             break;
-        case 4:
+        case 4: logout_user();
+        case 5:
             printf("\n\t\t\tThank your for being with us");
             exit(0);
             break;
@@ -191,20 +197,22 @@ void deposit(){
     printf("Enter amount to deposit: ");
     scanf("%f", &money);
 
+    int flag = 0;
+
     while(fread(&acc_r, sizeof(acc_r), 1, file)){
         if(acc_r.acc_no == acc_no){
             acc_r.balance += money;
             fseek(file, -sizeof(acc_r), SEEK_CUR);
             fwrite(&acc_r, sizeof(acc_r), 1, file);
-            fclose(file);
             show_loading("\n\t\t\tProcessing deposit");
             printf("\n\t\t\tSuccessfully deposited Tk. %.2f \n\n\t\t\tNew balance is Tk. %.2f", money, acc_r.balance);
-            return;
-        }
 
-        fclose(file);
-        printf("\nAccount no. %d was not found in records.", acc_no);
+            flag = 1;
+            break;
+        }
     }
+    if(!flag) printf("\nAccount no. %d was not found in records.", acc_no);
+    fclose(file);
 }
 void withdraw(){
     FILE *file = fopen(ACCOUNT_FILE, "rb+");
