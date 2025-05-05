@@ -4,6 +4,9 @@
 #include <unistd.h>
 #include <conio.h>
 #include <time.h>
+#include "transaction.h"
+#include "utils.h"
+#include <ctype.h>
 
 void user_menu();
 void login_user();
@@ -19,6 +22,10 @@ void get_date(char*);
 void display_time_date();
 void show_loading(const char* message);
 void clear_screen();
+void to_uppercase(char* str);
+int get_password();
+void transfer();
+void transaction_history();
 
 const char* ACCOUNT_FILE = "account.dat";
 
@@ -34,20 +41,36 @@ int main(){
     return 0;
 }
 
-void welcome(){
+void welcome() {
     clear_screen();
     system("cls");
-    printf("\n\n\n");
-    printf("\t\t\t==== WELCOME TO NUBPay ==== \n");
-    printf("\t\t A Organized Payment system for NUB Students " );
-    printf("\n\n\n");
+
+    printf("\n\n");
+    printf("\t\t\t=====================================================\n");
+    printf("\t\t\t||                                                 ||\n");
+    printf("\t\t\t||               WELCOME TO NUBPay                 ||\n");
+    printf("\t\t\t||                                                 ||\n");
+    printf("\t\t\t=====================================================\n");
+    printf("\t\t\t||                                                 ||\n");
+    printf("\t\t\t||   A Secure and Organized Payment System         ||\n");
+    printf("\t\t\t||   Exclusively for NUB Students                  ||\n");
+    printf("\t\t\t||                                                 ||\n");
+    printf("\t\t\t=====================================================\n");
+
+    printf("\n\n");
     display_time_date();
-    printf("\n---------------------------------------------------------------------------------" );
-    printf("\n\t\t\t\t\t DEVELOPED BY Saruf, Jakaria, Shihab, Nur\n\n\n" );
+
+    printf("\n\t\t--------------------------------------------------------------------------\n");
+    printf("\t\t\t\t\tDeveloped By: Saruf, Jakaria, Shihab, Nur\n");
+    printf("\t\t--------------------------------------------------------------------------\n");
+    printf("\n\t\t\tSome test account: \n");
+    printf("\t\t\t acc_no : 123   pass: 4455\n");
+    printf("\t\t\t acc_no : 1857  pass: 321\n");
+    printf("\n\n\t\t\tPress any key to continue...");
+    getch();
     user_form();
-    return;
 }
-void user_form(){4
+void user_form(){
     int option;
     while (1)
     {
@@ -64,7 +87,8 @@ void user_form(){4
         case 2: create_acc();
             break;
         case 3:
-            printf("\nExiting Program.\n");
+            printf("\t\t\tThank you for using NUBPay.\n\n");
+            show_loading("Exiting");
             return;
             break;
         default: printf("\nInvalid option");
@@ -72,80 +96,101 @@ void user_form(){4
         }
     }
 }
-void create_acc(){
+void create_acc() {
     Account acc;
 
     FILE *file = fopen(ACCOUNT_FILE, "ab+");
-    if(file == NULL) {
-        printf("\n\\t\t\tUnable to open file");
+    if (file == NULL) {
+        printf("\n\t\t\tUnable to open account file!");
         return;
     }
 
-    char c;
-    do{
-        c = getchar();
-    }while (c != '\n' && c != EOF);
+    clear_screen();
+    printf("\n\n\t\t\t===================================================\n");
+    printf("\n\t\t\t\t           REGISTRATION PAGE            \n");
+    printf("\n\t\t\t====================================================\n");
 
-    printf("\n\tEnter your name: ");
+    char c;
+    do {
+        c = getchar();
+    } while (c != '\n' && c != EOF);
+
+    printf("\n\t\t\tEnter your full name: ");
     fgets(acc.name, sizeof(acc.name), stdin);
     int ind = strcspn(acc.name, "\n");
-    acc.name[ind] = '\0';
+    acc.name[ind] = '\0'; // Remove newline character
 
-    printf("\tEnter your account number: ");
+    printf("\t\t\tEnter your account number: ");
     scanf("%d", &acc.acc_no);
+    while ((c = getchar()) != '\n' && c != EOF);
 
-    printf("\tcreat a unique password: ");
-    scanf("%d", &acc.pass);
+    printf("\t\t\tCreate a unique password (numbers only): ");
+    scanf("%d", &acc.pass); // Save password as an integer
+    while ((c = getchar()) != '\n' && c != EOF);
 
     acc.balance = 0;
 
-    fwrite(&acc, sizeof(acc), 1, file);
-    show_loading("\n\t\t\tCreating account");
-    printf("\n\t\t\tAccount created successfully!\n");
+    fwrite(&acc, sizeof(acc), 1, file); // Save the account details
+    show_loading("Creating your account");
+
+    clear_screen();
+    to_uppercase(acc.name);
+
+    printf("\n\n\t\t\t========================================\n");
+    printf("\n\t\t\t  Account created successfully!");
+    printf("\n\t\t\t  WELCOME, %s!\n", acc.name);
+    printf("\n\t\t\t========================================\n");
+
+
     fclose(file);
 }
-void login_user(){
+
+void login_user() {
     FILE *file = fopen(ACCOUNT_FILE, "rb+");
-    if(file == NULL){
-        printf("Unable to open a");
+    if (file == NULL) {
+        printf("\n\t\t\tUnable to open account file!");
         return;
     }
 
     int acc_no;
     int pass;
     Account acc_r;
+    char c;
 
-    printf("\nEnter your account No: ");
+    clear_screen();
+    printf("\n\n\t\t\t===================================================\n");
+    printf("\n\t\t\t\t           LOGIN PAGE            \n");
+    printf("\n\t\t\t====================================================\n");
+
+    printf("\n\t\t\tEnter your account number: ");
     scanf("%d", &acc_no);
-    printf("\nEnter your password: ");
-    char ch;
-    while((ch = getch()) != '\r') {
-        if(ch == '\b') {
-            if(pass > 0) {
-                printf("\b \b");
-                pass /= 10;
-            }
-        } else if(ch >= '0' && ch <= '9') {
-            printf("*");
-            pass = pass * 10 + (ch - '0');
-        }
-    }
+    while ((c = getchar()) != '\n' && c != EOF);
 
+    printf("\t\t\tEnter your password: ");
+    pass = get_password(); // Read password as an integer
 
-    while(fread(&acc_r, sizeof(acc_r), 1, file)){
-        if(acc_r.acc_no == acc_no && acc_r.pass == pass){
+    while (fread(&acc_r, sizeof(acc_r), 1, file)) {
+        if (acc_r.acc_no == acc_no && acc_r.pass == pass) { // Compare account number and password
+
             fclose(file);
+
             show_loading("\n\n\t\t\tLogging in");
-            sleep(2);
-            printf("\n\n\t\t\tYou are logged in your account successfully!!");
-            printf("\n\n\t\t\tWELCOME BACK %s!!", acc_r.name);
+            clear_screen();
+            to_uppercase(acc_r.name);
+
+            printf("\n\n\t\t\t====================================================\n");
+            printf("\n\t\t\t  Welcome, %s!\t\t Account No. %d\n", acc_r.name, acc_r.acc_no);
+
+            printf("\n\t\t\t====================================================\n");
             user_menu();
             return;
         }
     }
+
     fclose(file);
-    printf("\n\t\t\tInvalid credantials, Try again.");
+    printf("\n\n\t\t\tInvalid credentials. Please try again.\n");
 }
+
 void logout_user(){
     welcome();
 }
@@ -153,11 +198,14 @@ void user_menu(){
     while (1)
     {
         int choice;
+
         printf("\n\n\t1. deposit money\n");
         printf("\t2. withdraw money\n");
         printf("\t3. check balance\n");
-        printf("\t4. Logout\n");
-        printf("\t5. exit\n");
+        printf("\t4. transactions\n");
+        printf("\t5. Logout\n");
+        printf("\t6. Transfer money\n");
+        printf("\t7. exit\n\n");
         printf("\tEnter your choice: ");
         scanf("%d", &choice);
 
@@ -169,8 +217,14 @@ void user_menu(){
             break;
         case 3: check_balance();
             break;
-        case 4: logout_user();
-        case 5:
+        case 4:
+            transaction_history();
+            break;
+        case 5: logout_user();
+            break;
+        case 6: transfer();
+            break;
+        case 7:
             printf("\n\t\t\tThank your for being with us");
             exit(0);
             break;
@@ -189,26 +243,47 @@ void deposit(){
     }
 
     int acc_no;
+    int acc_pass;
     float money;
     Account acc_r;
 
-    printf("\nEnter acc no: ");
+    printf("\n\t\tEnter account no: ");
     scanf("%d", &acc_no);
-    printf("Enter amount to deposit: ");
+    printf("\n\t\tEnter password: ");
+    acc_pass = get_password();
+    printf("\n\t\tEnter amount to deposit: ");
     scanf("%f", &money);
 
     int flag = 0;
 
     while(fread(&acc_r, sizeof(acc_r), 1, file)){
         if(acc_r.acc_no == acc_no){
-            acc_r.balance += money;
-            fseek(file, -sizeof(acc_r), SEEK_CUR);
-            fwrite(&acc_r, sizeof(acc_r), 1, file);
-            show_loading("\n\t\t\tProcessing deposit");
-            printf("\n\t\t\tSuccessfully deposited Tk. %.2f \n\n\t\t\tNew balance is Tk. %.2f", money, acc_r.balance);
+            if(acc_r.pass == acc_pass){
+                if(money <= 0){
+                    fclose(file);
+                    show_loading("\n\t\t\tProcessing deposit");
+                    clear_screen();
+                    printf("\n\t\t\tInvalid amount!");
+                    return;
+                }
+                acc_r.balance += money;
+                fseek(file, -(long)sizeof(acc_r), SEEK_CUR);
+                fwrite(&acc_r, sizeof(acc_r), 1, file);
+                show_loading("\n\t\t\tProcessing deposit");
+                printf("\n\t\t\tSuccessfully deposited Tk. %.2f \n\n\t\t\tNew balance is Tk. %.2f", money, acc_r.balance);
 
-            flag = 1;
-            break;
+                // Log the transaction
+                log_transaction(acc_no, "Deposit", money);
+
+                flag = 1;
+                break;
+            }else {
+                fclose(file);
+                show_loading("\n\t\t\tProcessing deposit");
+                clear_screen();
+                printf("\n\t\t\tInvalid password!");
+                return;
+            }
         }
     }
     if(!flag) printf("\nAccount no. %d was not found in records.", acc_no);
@@ -222,26 +297,50 @@ void withdraw(){
     }
 
     int acc_no;
+    int acc_pass;
     float money;
     Account acc_r;
 
-    printf("\nEnter acc no: ");
+    printf("\n\t\tEnter account no: ");
     scanf("%d", &acc_no);
-    printf("\nEnter amount to withdraw: ");
+    printf("\n\t\tEnter password: ");
+    acc_pass = get_password();
+    printf("\n\t\tEnter amount to withdraw: ");
     scanf("%f", &money);
 
     while(fread(&acc_r, sizeof(acc_r), 1, file)){
         if(acc_r.acc_no == acc_no){
-            if(acc_r.balance >= money){
-                acc_r.balance -= money;
-                fseek(file, -sizeof(acc_r), SEEK_CUR);
-                fwrite(&acc_r, sizeof(acc_r), 1, file);
+            if(acc_r.pass == acc_pass){
+                if(money <= 0){
+                    fclose(file);
+                    show_loading("\n\t\t\tProcessing withdrawal");
+                    clear_screen();
+                    printf("\n\t\t\tInvalid amount!");
+                    return;
+                }
+                else if(acc_r.balance >= money){
+                    acc_r.balance -= money;
+                    fseek(file, -(long)sizeof(acc_r), SEEK_CUR);
+                    fwrite(&acc_r, sizeof(acc_r), 1, file);
+                    fclose(file);
+
+                    show_loading("\n\t\t\tProcessing withdrawal");
+                    // Log the transaction
+                    log_transaction(acc_no, "Withdraw", money);
+
+                    return;
+                }else {
+                    fclose(file);
+                    show_loading("\n\t\t\tProcessing withdrawal");
+                    clear_screen();
+                    printf("\n\t\t\tInsufficient balance!");
+                    return;
+                }
+            }else {
                 fclose(file);
                 show_loading("\n\t\t\tProcessing withdrawal");
-                printf("\n\t\t\tSuccessfully withdrawn Tk. %.2f \n\n\t\t\tNew balance is Tk. %.2f", money, acc_r.balance);
-                return;
-            }else {
-                printf("Insufficient balance!");
+                clear_screen();
+                printf("\n\t\t\tInvalid password!");
                 return;
             }
         }
@@ -253,19 +352,22 @@ void withdraw(){
 void check_balance(){
     FILE *file = fopen(ACCOUNT_FILE, "rb");
     if(file == NULL){
-        printf("\nUnable to open file!!");
+        printf("\n\tUnable to open file!!");
         return;
     }
 
     int acc_no;
     Account acc_read;
-    printf("\nEnter your account number: ");
+    printf("\n\tEnter your account number: ");
     scanf("%d", &acc_no);
 
     while(fread(&acc_read, sizeof(acc_read), 1, file)){
         if(acc_read.acc_no == acc_no){
             show_loading("\n\t\t\tFetching balance");
-            printf("\n\t\t\tYour current balance is Tk. %.2f", acc_read.balance);
+            clear_screen();
+            printf("\n\n\t\t\t====================================================\n");
+            printf("\n\t\t\t\tYour current balance is Tk. %.2f\n", acc_read.balance);
+            printf("\n\t\t\t====================================================\n");
             fclose(file);
             return;
         }
@@ -299,23 +401,137 @@ void display_time_date(){
     char date[50];
     get_date(date);
 
-    printf("\tTime: %s\n", time);
-    printf("\tDate: %s\n", date);
+    printf("\t\t\tTime: %s\t Datte: %s\n", time, date);
     return;
 }
 void clear_screen() {
-    #ifdef _Win32
-      system("cls");
+
+    #ifdef _WIN32
+        system("cls");
     #else
-      system("clear");
+        system("clear");
     #endif
 }
 void show_loading(const char* message) {
-    printf("%s", message);
+    printf("\n\n\t\t\t%s", message);
     fflush(stdout);
     for (int i = 0; i < 3; i++) {
         usleep(100000);
         printf(".");
         fflush(stdout);
     }
+    sleep(1);
+}
+void to_uppercase(char* str) {
+    for (int i = 0; str[i] != '\0'; i++) {
+        str[i] = toupper((unsigned char)str[i]);
+    }
+}
+int get_password(){
+    int pass = 0;
+    char ch;
+    while ((ch = getch()) != '\r') { // Read password without echoing
+        if (ch == '\b') { // Handle backspace
+            if (pass > 0) {
+                printf("\b \b");
+                pass /= 10;
+            }
+        } else if (ch >= '0' && ch <= '9') {
+            printf("*");
+            pass = pass * 10 + (ch - '0');
+        }
+    }
+    return pass;
+}
+void transfer() {
+    FILE *file = fopen(ACCOUNT_FILE, "rb+");
+    if (file == NULL) {
+        printf("Unable to open account file!!");
+        return;
+    }
+
+    int sender_acc_no, recipient_acc_no, sender_pass;
+    float amount;
+    Account acc_r, sender, recipient;
+    int sender_found = 0, recipient_found = 0;
+
+    printf("\n\t\tEnter your account number: ");
+    scanf("%d", &sender_acc_no);
+    printf("\n\t\tEnter your password: ");
+    sender_pass = get_password();
+    printf("\n\t\tEnter recipient's account number: ");
+    scanf("%d", &recipient_acc_no);
+    printf("\n\t\tEnter amount to transfer: ");
+    scanf("%f", &amount);
+
+    if (amount <= 0) {
+        printf("\n\t\t\tInvalid amount!");
+        fclose(file);
+        return;
+    }
+
+    // Search for sender and recipient accounts
+    while (fread(&acc_r, sizeof(acc_r), 1, file)) {
+        if (acc_r.acc_no == sender_acc_no && acc_r.pass == sender_pass) {
+            sender = acc_r;
+            sender_found = 1;
+        }
+        if (acc_r.acc_no == recipient_acc_no) {
+            recipient = acc_r;
+            recipient_found = 1;
+        }
+    }
+
+    if (!sender_found) {
+        printf("\n\t\t\tSender account not found or invalid password!");
+        fclose(file);
+        return;
+    }
+
+    if (!recipient_found) {
+        printf("\n\t\t\tRecipient account not found!");
+        fclose(file);
+        return;
+    }
+
+    if (sender.balance < amount) {
+        printf("\n\t\t\tInsufficient balance!");
+        fclose(file);
+        return;
+    }
+
+    // Update balances
+    sender.balance -= amount;
+    recipient.balance += amount;
+
+    // Update the file
+    rewind(file);
+    while (fread(&acc_r, sizeof(acc_r), 1, file)) {
+        if (acc_r.acc_no == sender_acc_no) {
+            fseek(file, -(long)sizeof(acc_r), SEEK_CUR);
+            fwrite(&sender, sizeof(sender), 1, file);
+        }
+        if (acc_r.acc_no == recipient_acc_no) {
+            fseek(file, -(long)sizeof(acc_r), SEEK_CUR);
+            fwrite(&recipient, sizeof(recipient), 1, file);
+        }
+    }
+
+    fclose(file);
+
+    // Log the transactions
+    log_transaction(sender_acc_no, "Transfer Out", amount);
+    log_transaction(recipient_acc_no, "Transfer In", amount);
+
+    show_loading("\n\t\t\tProcessing transfer");
+    printf("\n\t\t\tSuccessfully transferred Tk. %.2f to Account No. %d", amount, recipient_acc_no);
+}
+void transaction_history(){
+    int acc_no, acc_pass;
+
+    printf("\n\tEnter your account number: ");
+    scanf("%d", &acc_no);
+    // printf("\n\tEnter your password: ");
+    // acc_pass = get_password();
+    display_transaction_history(acc_no);
 }
