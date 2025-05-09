@@ -28,6 +28,7 @@ void transfer();
 void transaction_history();
 
 const char* ACCOUNT_FILE = "account.txt";
+int logged_in = 0;
 
 typedef struct {
     char name[50];
@@ -120,13 +121,45 @@ void create_acc() {
     int ind = strcspn(acc.name, "\n");
     acc.name[ind] = '\0'; // Remove newline character
 
-    printf("\t\t\tEnter your account number: ");
-    scanf("%d", &acc.acc_no);
+    // Validate account number
+    while (1) {
+        printf("\t\t\tEnter your account number: ");
+        if (scanf("%d", &acc.acc_no) == 1) break;
+        else {
+            printf("\t\t\tInvalid input! Please enter numbers only.\n");
+            while ((c = getchar()) != '\n' && c != EOF); // Clear input buffer
+        }
+    }
     while ((c = getchar()) != '\n' && c != EOF);
 
-    printf("\t\t\tCreate a unique password (numbers only): ");
-    scanf("%d", &acc.pass); // Save password as an integer
-    while ((c = getchar()) != '\n' && c != EOF);
+    // Validate password
+    while (1) {
+        printf("\t\t\tCreate a unique password (at least 4 digits): ");
+        char password[50];
+        scanf("%s", password);
+
+        int is_valid = 1;
+        int length = strlen(password);
+
+        // Check if the password contains only digits and is at least 4 characters long
+        if (length < 4) {
+            is_valid = 0;
+        } else {
+            for (int i = 0; i < length; i++) {
+                if (!isdigit(password[i])) {
+                    is_valid = 0;
+                    break;
+                }
+            }
+        }
+
+        if (is_valid) {
+            acc.pass = atoi(password); // Convert the valid password to an integer
+            break;
+        } else {
+            printf("\n\t\t\tInvalid password! Please enter at least 4 digits.\n");
+        }
+    }
 
     acc.balance = 0;
 
@@ -183,7 +216,8 @@ void login_user() {
 
             printf("\n\t\t\t====================================================\n");
             user_menu();
-            return;
+            logged_in = acc_no;
+            return; // Successful login
         }
     }
 
@@ -450,46 +484,50 @@ void transfer() {
         return;
     }
 
-    int sender_acc_no, recipient_acc_no, sender_pass;
+    int sender_acc_no = logged_in;
+    int recipient_acc_no, sender_pass;
     float amount;
-    Account acc_r, sender, recipient;
-    int sender_found = 0, recipient_found = 0;
 
-    printf("\n\t\tEnter your account number: ");
-    scanf("%d", &sender_acc_no);
+    Account acc_r, sender, recipient;
+    int recipient_found = 0;
+
     printf("\n\t\tEnter your password: ");
     sender_pass = get_password();
+
+    while(fread(&acc_r, sizeof(acc_r), 1, file)) {
+        if (acc_r.acc_no == sender_acc_no) {
+            if (acc_r.pass == sender_pass) {
+                sender = acc_r;
+                break;
+            } else {
+                printf("\n\t\t\tWrong password!");
+                fclose(file);
+                return;
+            }
+        }
+    }
+
     printf("\n\t\tEnter recipient's account number: ");
     scanf("%d", &recipient_acc_no);
+
+    while(fread(&acc_r, sizeof(acc_r), 1, file)) {
+        if (acc_r.acc_no == recipient_acc_no) {
+            recipient_found = 1;
+            recipient = acc_r;
+            break;
+        }
+    }
+    if (!recipient_found) {
+        printf("\n\t\t\tAccount no. %d was not found in records.", recipient_acc_no);
+        fclose(file);
+        return;
+    }
+
     printf("\n\t\tEnter amount to transfer: ");
     scanf("%f", &amount);
 
     if (amount <= 0) {
         printf("\n\t\t\tInvalid amount!");
-        fclose(file);
-        return;
-    }
-
-    // Search for sender and recipient accounts
-    while (fread(&acc_r, sizeof(acc_r), 1, file)) {
-        if (acc_r.acc_no == sender_acc_no && acc_r.pass == sender_pass) {
-            sender = acc_r;
-            sender_found = 1;
-        }
-        if (acc_r.acc_no == recipient_acc_no) {
-            recipient = acc_r;
-            recipient_found = 1;
-        }
-    }
-
-    if (!sender_found) {
-        printf("\n\t\t\tSender account not found or invalid password!");
-        fclose(file);
-        return;
-    }
-
-    if (!recipient_found) {
-        printf("\n\t\t\tRecipient account not found!");
         fclose(file);
         return;
     }
