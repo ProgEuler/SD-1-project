@@ -76,7 +76,6 @@ void user_form(){
     while (1)
     {
         printf("\n\t1. Login");
-        printf("\n\t\t\tDont have an account?");
         printf("\n\t2. Register");
         printf("\n\t3. Exit");
         printf("\n\tSelect an option: ");
@@ -198,6 +197,18 @@ void login_user() {
     printf("\n\t\t\tEnter your account number: ");
     scanf("%d", &acc_no);
     while ((c = getchar()) != '\n' && c != EOF);
+
+    while(fread(&acc_r, sizeof(acc_r), 1, file)) {
+        if (acc_r.acc_no == acc_no) {
+            break;
+        }
+    }
+    if (acc_r.acc_no != acc_no) {
+        fclose(file);
+        printf("\n\t\t\tAccount no. %d was not found in records. Please register\n", acc_no);
+        return;
+    }
+    rewind(file);
 
     printf("\t\t\tEnter your password: ");
     pass = get_password(); // Read password as an integer
