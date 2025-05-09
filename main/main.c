@@ -92,7 +92,7 @@ void user_form(){
             show_loading("Exiting");
             return;
             break;
-        default: printf("\nInvalid option");
+        default: printf("\n\t\t\tInvalid option");
             break;
         }
     }
@@ -204,7 +204,7 @@ void login_user() {
 
     while (fread(&acc_r, sizeof(acc_r), 1, file)) {
         if (acc_r.acc_no == acc_no && acc_r.pass == pass) { // Compare account number and password
-
+            logged_in = acc_no;
             fclose(file);
 
             show_loading("\n\n\t\t\tLogging in");
@@ -216,7 +216,7 @@ void login_user() {
 
             printf("\n\t\t\t====================================================\n");
             user_menu();
-            logged_in = acc_no;
+
             return; // Successful login
         }
     }
@@ -276,15 +276,29 @@ void deposit(){
         return;
     }
 
-    int acc_no;
+    int acc_no = logged_in;
     int acc_pass;
     float money;
     Account acc_r;
 
-    printf("\n\t\tEnter account no: ");
-    scanf("%d", &acc_no);
     printf("\n\t\tEnter password: ");
     acc_pass = get_password();
+
+    while(fread(&acc_r, sizeof(acc_r), 1, file)){
+        if(acc_r.acc_no == acc_no){
+            if(acc_r.pass == acc_pass){
+                break;
+            }else {
+                fclose(file);
+                clear_screen();
+                printf("\n\t\t\tWrong password!");
+                return;
+            }
+        }
+    }
+
+    rewind(file);
+
     printf("\n\t\tEnter amount to deposit: ");
     scanf("%f", &money);
 
@@ -298,6 +312,13 @@ void deposit(){
                     show_loading("\n\t\t\tProcessing deposit");
                     clear_screen();
                     printf("\n\t\t\tInvalid amount!");
+                    return;
+                }
+                if(money > 50000){
+                    fclose(file);
+                    show_loading("\n\t\t\tProcessing deposit");
+                    clear_screen();
+                    printf("\n\t\t\tMaximum deposit limit is Tk. 50000!");
                     return;
                 }
                 acc_r.balance += money;
@@ -330,15 +351,28 @@ void withdraw(){
         return;
     }
 
-    int acc_no;
+    int acc_no = logged_in;
     int acc_pass;
     float money;
     Account acc_r;
 
-    printf("\n\t\tEnter account no: ");
-    scanf("%d", &acc_no);
     printf("\n\t\tEnter password: ");
     acc_pass = get_password();
+
+    while(fread(&acc_r, sizeof(acc_r), 1, file)){
+        if(acc_r.acc_no == acc_no){
+            if(acc_r.pass == acc_pass){
+                break;
+            }else {
+                fclose(file);
+                clear_screen();
+                printf("\n\t\t\tWrong password!");
+                return;
+            }
+        }
+    }
+
+    rewind(file);
     printf("\n\t\tEnter amount to withdraw: ");
     scanf("%f", &money);
 
@@ -370,12 +404,6 @@ void withdraw(){
                     printf("\n\t\t\tInsufficient balance!");
                     return;
                 }
-            }else {
-                fclose(file);
-                show_loading("\n\t\t\tProcessing withdrawal");
-                clear_screen();
-                printf("\n\t\t\tInvalid password!");
-                return;
             }
         }
 
@@ -489,13 +517,14 @@ void transfer() {
     float amount;
 
     Account acc_r, sender, recipient;
-    int recipient_found = 0;
+    int recipient_found = 0, sender_found = 0;
 
     printf("\n\t\tEnter your password: ");
     sender_pass = get_password();
 
     while(fread(&acc_r, sizeof(acc_r), 1, file)) {
         if (acc_r.acc_no == sender_acc_no) {
+            sender_found = 1;
             if (acc_r.pass == sender_pass) {
                 sender = acc_r;
                 break;
@@ -506,9 +535,22 @@ void transfer() {
             }
         }
     }
+    if (!sender_found) {
+        printf("\n\t\t\tSender account not found!");
+        fclose(file);
+        return;
+    }
+
+    rewind(file);
 
     printf("\n\t\tEnter recipient's account number: ");
     scanf("%d", &recipient_acc_no);
+
+    if (sender.acc_no == recipient_acc_no) {
+        printf("\n\t\t\tYou cannot transfer money to your own account!");
+        fclose(file);
+        return;
+    }
 
     while(fread(&acc_r, sizeof(acc_r), 1, file)) {
         if (acc_r.acc_no == recipient_acc_no) {
@@ -538,6 +580,7 @@ void transfer() {
         return;
     }
 
+    printf("\n\t\t\tProcessing transfer...");
     // Update balances
     sender.balance -= amount;
     recipient.balance += amount;
@@ -560,9 +603,6 @@ void transfer() {
     // Log the transactions
     log_transaction(sender_acc_no, "Transfer Out", amount);
     log_transaction(recipient_acc_no, "Transfer In", amount);
-
-    show_loading("\n\t\t\tProcessing transfer");
-    printf("\n\t\t\tSuccessfully transferred Tk. %.2f to Account No. %d", amount, recipient_acc_no);
 }
 void transaction_history(){
     int acc_no, acc_pass;
