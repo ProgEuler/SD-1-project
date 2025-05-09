@@ -49,7 +49,7 @@ NUBPay is a secure and organized payment system exclusively designed for NUB stu
 
 ### Contributors
 
-Saruf Jakaria Nur Shihab
+Saruf, Jakaria, Nur, Shihab
 
 
 ### License
