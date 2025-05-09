@@ -3,7 +3,7 @@
 #include "transaction.h"
 #include "utils.h"
 
-const char* TRANSACTION_FILE = "transactions.dat";
+const char* TRANSACTION_FILE = "transaction.txt";
 
 void log_transaction(int acc_no, const char* type, float amount) {
     FILE *file = fopen(TRANSACTION_FILE, "ab+");

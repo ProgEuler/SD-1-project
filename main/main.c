@@ -27,7 +27,7 @@ int get_password();
 void transfer();
 void transaction_history();
 
-const char* ACCOUNT_FILE = "account.dat";
+const char* ACCOUNT_FILE = "account.txt";
 
 typedef struct {
     char name[50];
